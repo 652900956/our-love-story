@@ -54,6 +54,7 @@ create table if not exists public.ledger (
   amount      numeric     not null default 0,            -- 金额（正数，单位元）
   category    text        default '其他',                -- 消费分类 / 存款来源
   remark      text        default '',                    -- 备注
+  image       text        default '',                    -- 图片（base64 Data URL 或 图床 URL）
   created_at  timestamptz default now()
 );
 
@@ -81,6 +82,7 @@ create table if not exists public.list_items (
   title       text        not null default '',
   description text        default '',                    -- 补充说明
   done        boolean     not null default false,
+  progress    numeric     not null default 0,            -- 完成百分比 0-100
   created_at  timestamptz default now()
 );
 

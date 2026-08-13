@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Pencil, Trash2, Check, CalendarDays } from 'lucide-react'
+import { Plus, Pencil, Trash2, Check, CalendarDays, Settings2 } from 'lucide-react'
 import PageShell from '../components/PageShell'
 import PageHeader from '../components/PageHeader'
-import CalendarGrid from '../components/CalendarGrid'
+import CalendarGrid, { type MarkerStyle, type MarkerShape } from '../components/CalendarGrid'
 import Modal from '../components/Modal'
 import theme from '../config/theme.config'
 import {
@@ -30,6 +30,27 @@ const CATEGORY_META: Record<TodoCategory, { label: string; emoji: string }> = {
 }
 const CATEGORIES: TodoCategory[] = ['mine', 'hers', 'shared']
 
+const MARKER_SHAPES: { value: MarkerShape; label: string; icon: string }[] = [
+  { value: 'dot', label: '圆点', icon: '●' },
+  { value: 'heart', label: '爱心', icon: '♥' },
+  { value: 'square', label: '方块', icon: '■' },
+]
+
+const LS_MARKER = 'lovey_calendar_marker_style'
+
+function loadMarkerStyle(): MarkerStyle {
+  try {
+    const raw = localStorage.getItem(LS_MARKER)
+    if (raw) return JSON.parse(raw)
+  } catch {
+    /* ignore */
+  }
+  return {
+    shape: 'dot',
+    colors: { mine: '#4cc9ff', hers: '#ff6b9d', shared: '#a855f7' },
+  }
+}
+
 const PRIORITY_META: Record<TodoPriority, { label: string }> = {
   urgent: { label: '紧急' },
   normal: { label: '普通' },
@@ -51,6 +72,8 @@ export default function CalendarTodo() {
   const [remarkDraft, setRemarkDraft] = useState<string>('')
   const [filterCategory, setFilterCategory] = useState<TodoCategory | 'all'>('all')
   const [filterPriority, setFilterPriority] = useState<TodoPriority | 'all'>('all')
+  const [markerStyle, setMarkerStyle] = useState<MarkerStyle>(loadMarkerStyle)
+  const [showMarkerPanel, setShowMarkerPanel] = useState(false)
 
   const [modal, setModal] = useState<ModalState>({
     open: false,
@@ -85,6 +108,23 @@ export default function CalendarTodo() {
   }, [selectedDate, remarks])
 
   const remarkDateSet = useMemo(() => new Set(remarks.map((r) => r.date)), [remarks])
+
+  const todoDates = useMemo(() => {
+    const map: Record<string, TodoCategory[]> = {}
+    for (const t of todos) {
+      if (!map[t.date]) map[t.date] = []
+      map[t.date].push(t.category)
+    }
+    return map
+  }, [todos])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_MARKER, JSON.stringify(markerStyle))
+    } catch {
+      /* ignore */
+    }
+  }, [markerStyle])
 
   const saveRemark = async () => {
     const text = remarkDraft.trim()
@@ -175,8 +215,95 @@ export default function CalendarTodo() {
         <CalendarGrid
           selectedDate={selectedDate}
           remarkDates={remarkDateSet}
+          todoDates={todoDates}
+          markerStyle={markerStyle}
           onSelect={setSelectedDate}
         />
+      </div>
+
+      {/* 日期标记样式自定义 */}
+      <div style={{ maxWidth: 760, margin: '0.8rem auto 0', padding: '0 1rem' }}>
+        <button
+          type="button"
+          onClick={() => setShowMarkerPanel((s) => !s)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            fontFamily: theme.fonts.serif,
+            fontSize: '0.85rem',
+            color: theme.colors.textMuted,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          <Settings2 size={15} /> 自定义日期标记
+        </button>
+        <AnimatePresence>
+          {showMarkerPanel && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              style={{
+                marginTop: '0.6rem',
+                padding: '0.9rem 1rem',
+                background: theme.colors.bgCard,
+                borderRadius: theme.radius.card,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{ marginBottom: '0.7rem', fontFamily: theme.fonts.serif, color: theme.colors.textDark, fontWeight: 700 }}>
+                标记图案
+              </div>
+              <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1rem' }}>
+                {MARKER_SHAPES.map((s) => (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => setMarkerStyle((prev) => ({ ...prev, shape: s.value }))}
+                    style={{
+                      flex: 1,
+                      padding: '0.4rem',
+                      borderRadius: '0.7rem',
+                      border: `1.5px solid ${markerStyle.shape === s.value ? theme.colors.primary : 'rgba(208,206,206,0.4)'}`,
+                      background: markerStyle.shape === s.value ? `${theme.colors.primary}14` : theme.colors.bgCardHover,
+                      color: theme.colors.textDark,
+                      cursor: 'pointer',
+                      fontFamily: theme.fonts.serif,
+                    }}
+                  >
+                    <span style={{ fontSize: '1.1rem' }}>{s.icon}</span>
+                    <div style={{ fontSize: '0.75rem', marginTop: 2 }}>{s.label}</div>
+                  </button>
+                ))}
+              </div>
+              <div style={{ marginBottom: '0.7rem', fontFamily: theme.fonts.serif, color: theme.colors.textDark, fontWeight: 700 }}>
+                归属颜色
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+                {CATEGORIES.map((cat) => (
+                  <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontFamily: theme.fonts.serif, color: theme.colors.textMain, fontSize: '0.9rem' }}>
+                    <input
+                      type="color"
+                      value={markerStyle.colors[cat]}
+                      onChange={(e) =>
+                        setMarkerStyle((prev) => ({
+                          ...prev,
+                          colors: { ...prev.colors, [cat]: e.target.value },
+                        }))
+                      }
+                      style={{ width: 32, height: 32, border: 'none', borderRadius: 8, cursor: 'pointer', background: 'transparent' }}
+                    />
+                    {CATEGORY_META[cat].emoji} {CATEGORY_META[cat].label}
+                  </label>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* 选中日期备注 */}

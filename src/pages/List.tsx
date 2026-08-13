@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageShell from '../components/PageShell'
 import PageHeader from '../components/PageHeader'
@@ -8,6 +8,7 @@ import {
   fetchList,
   addList,
   toggleList,
+  updateListProgress,
   deleteList,
   subscribeList,
   loveListIsCloud,
@@ -36,8 +37,16 @@ export default function List() {
     const cur = items.find((it) => it.id === id)
     if (!cur) return
     const nextDone = !cur.done
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, done: nextDone } : it)))
+    const nextProgress = nextDone ? 100 : 0
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, done: nextDone, progress: nextProgress } : it)))
     await toggleList(id, nextDone)
+  }
+
+  const setProgress = async (id: string, progress: number) => {
+    const p = Math.max(0, Math.min(100, Math.round(progress)))
+    const done = p >= 100
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, progress: p, done } : it)))
+    await updateListProgress(id, p)
   }
   const remove = async (id: string) => {
     setItems((prev) => prev.filter((it) => it.id !== id))
@@ -143,6 +152,7 @@ export default function List() {
                     {it.desc}
                   </p>
                 )}
+                <ProgressSlider value={it.done ? 100 : it.progress} onChange={(v) => setProgress(it.id, v)} />
               </div>
               <button
                 type="button"
@@ -211,5 +221,100 @@ export default function List() {
         )}
       </div>
     </PageShell>
+  )
+}
+
+/** 完成度滑条：默认细线，点击后变粗可拖拽 */
+function ProgressSlider({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [active, setActive] = useState(false)
+  const trackRef = useRef<HTMLDivElement>(null)
+
+  const calcPct = (clientX: number) => {
+    const rect = trackRef.current?.getBoundingClientRect()
+    if (!rect) return value
+    const x = Math.max(rect.left, Math.min(rect.right, clientX))
+    return Math.round(((x - rect.left) / rect.width) * 100)
+  }
+
+  const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault()
+    setActive(true)
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    onChange(calcPct(clientX))
+  }
+
+  useEffect(() => {
+    if (!active) return
+    const move = (e: MouseEvent | TouchEvent) => {
+      const clientX = 'touches' in e ? (e as TouchEvent).touches[0].clientX : (e as MouseEvent).clientX
+      onChange(calcPct(clientX))
+    }
+    const up = () => setActive(false)
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+    window.addEventListener('touchmove', move, { passive: false })
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchmove', move)
+      window.removeEventListener('touchend', up)
+    }
+  }, [active, onChange, value])
+
+  const pct = Math.max(0, Math.min(100, value))
+
+  return (
+    <div style={{ marginTop: '0.55rem', userSelect: 'none' }}>
+      <div
+        ref={trackRef}
+        onMouseDown={handleStart}
+        onTouchStart={handleStart}
+        style={{
+          position: 'relative',
+          height: active ? 10 : 3,
+          borderRadius: 999,
+          background: `${theme.colors.primary}1a`,
+          cursor: 'pointer',
+          transition: 'height 0.2s ease',
+        }}
+      >
+        <div
+          style={{
+            width: `${pct}%`,
+            height: '100%',
+            borderRadius: 999,
+            background: theme.colors.primary,
+            transition: active ? 'none' : 'width 0.25s ease',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            left: `${pct}%`,
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: active ? 16 : 8,
+            height: active ? 16 : 8,
+            borderRadius: '50%',
+            background: '#fff',
+            border: `2px solid ${theme.colors.primary}`,
+            boxShadow: active ? `0 0 0 4px ${theme.colors.primary}33` : 'none',
+            transition: active ? 'none' : 'all 0.2s ease',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+      <div
+        style={{
+          fontSize: '0.72rem',
+          color: theme.colors.textMuted,
+          fontFamily: theme.fonts.serif,
+          marginTop: '0.35rem',
+        }}
+      >
+        完成度 {pct}%
+      </div>
+    </div>
   )
 }

@@ -75,6 +75,8 @@ export interface LedgerRecord {
   category: string
   /** 备注 */
   remark: string
+  /** 图片（base64 Data URL 或 图床 URL） */
+  image?: string
   /** 创建时间 ISO */
   createdAt: string
 }
@@ -368,6 +370,7 @@ const remoteStore: LoveyStore = {
         amount: Number(r.amount),
         category: r.category,
         remark: r.remark,
+        image: r.image ?? undefined,
         createdAt: String(r.created_at),
       }),
     )
@@ -383,6 +386,7 @@ const remoteStore: LoveyStore = {
         amount: input.amount,
         category: input.category,
         remark: input.remark,
+        image: input.image ?? null,
       })
       .select()
       .single()
@@ -398,6 +402,7 @@ const remoteStore: LoveyStore = {
       amount: Number(data.amount),
       category: data.category,
       remark: data.remark,
+      image: data.image ?? undefined,
       createdAt: String(data.created_at),
     }
   },
@@ -421,6 +426,7 @@ const remoteStore: LoveyStore = {
       amount: Number(data.amount),
       category: data.category,
       remark: data.remark,
+      image: data.image ?? undefined,
       createdAt: String(data.created_at),
     }
   },

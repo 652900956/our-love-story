@@ -14,7 +14,7 @@ import { list, type ListItem } from '../data/listContent'
 
 const LS_KEY = 'lovey-list-items'
 
-export type NewListItem = Omit<ListItem, 'id' | 'done'>
+export type NewListItem = Omit<ListItem, 'id' | 'done' | 'progress'>
 
 function genId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -44,7 +44,7 @@ export async function fetchList(): Promise<ListItem[]> {
   if (supabase) {
     const { data, error } = await supabase
       .from('list_items')
-      .select('id, title, description, done')
+      .select('id, title, description, done, progress')
       .order('created_at', { ascending: true })
     if (!error && data) {
       return data.map(
@@ -53,6 +53,7 @@ export async function fetchList(): Promise<ListItem[]> {
           title: String(r.title ?? ''),
           desc: String(r.description ?? ''),
           done: Boolean(r.done),
+          progress: Number(r.progress ?? 0),
         }),
       )
     }
@@ -63,12 +64,12 @@ export async function fetchList(): Promise<ListItem[]> {
 
 /** 新增一条约定，返回写入后的完整记录 */
 export async function addList(input: NewListItem): Promise<ListItem> {
-  const item: ListItem = { id: genId(), title: input.title, desc: input.desc, done: false }
+  const item: ListItem = { id: genId(), title: input.title, desc: input.desc, done: false, progress: 0 }
   if (supabase) {
     const { data, error } = await supabase
       .from('list_items')
-      .insert({ id: item.id, title: item.title, description: item.desc, done: false })
-      .select('id, title, description, done')
+      .insert({ id: item.id, title: item.title, description: item.desc, done: false, progress: 0 })
+      .select('id, title, description, done, progress')
       .single()
     if (!error && data) {
       return {
@@ -76,6 +77,7 @@ export async function addList(input: NewListItem): Promise<ListItem> {
         title: String(data.title ?? item.title),
         desc: String(data.description ?? ''),
         done: Boolean(data.done),
+        progress: Number(data.progress ?? 0),
       }
     }
     console.warn('[loveList] Supabase 写入失败，回退本地：', error?.message)
@@ -88,12 +90,25 @@ export async function addList(input: NewListItem): Promise<ListItem> {
 
 /** 切换某条约定的完成状态 */
 export async function toggleList(id: string, done: boolean): Promise<void> {
+  const progress = done ? 100 : 0
   if (supabase) {
-    const { error } = await supabase.from('list_items').update({ done }).eq('id', id)
+    const { error } = await supabase.from('list_items').update({ done, progress }).eq('id', id)
     if (!error) return
     console.warn('[loveList] Supabase 更新失败，回退本地：', error?.message)
   }
-  writeLocal(readLocal().map((it) => (it.id === id ? { ...it, done } : it)))
+  writeLocal(readLocal().map((it) => (it.id === id ? { ...it, done, progress } : it)))
+}
+
+/** 更新约定完成百分比（0-100） */
+export async function updateListProgress(id: string, progress: number): Promise<void> {
+  const p = Math.max(0, Math.min(100, Math.round(progress)))
+  const done = p >= 100
+  if (supabase) {
+    const { error } = await supabase.from('list_items').update({ done, progress: p }).eq('id', id)
+    if (!error) return
+    console.warn('[loveList] Supabase 更新进度失败，回退本地：', error?.message)
+  }
+  writeLocal(readLocal().map((it) => (it.id === id ? { ...it, done, progress: p } : it)))
 }
 
 /** 删除一条约定 */
