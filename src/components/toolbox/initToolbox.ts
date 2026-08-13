@@ -1200,6 +1200,65 @@ export function initToolbox(root: HTMLElement): () => void {
   root.appendChild(fab);
   root.appendChild(popup);
 
+  /* —— 悬浮按钮可拖动（默认左下角，位置持久化到 localStorage） —— */
+  let suppressClick = false; // 拖动结束后抑制误触的 click（避免开/关弹窗）
+  const POS_KEY = "kirameku-toolbox-fab-pos";
+  try {
+    const saved = JSON.parse(localStorage.getItem(POS_KEY) || "null");
+    if (saved && typeof saved.left === "number" && typeof saved.top === "number") {
+      fab.style.left = saved.left + "px";
+      fab.style.top = saved.top + "px";
+      fab.style.right = "auto";
+      fab.style.bottom = "auto";
+    }
+  } catch (e) { /* 忽略损坏的存储 */ }
+
+  let dragStartX = 0, dragStartY = 0, fabStartLeft = 0, fabStartTop = 0, dragging = false, moved = false;
+  const DRAG_THRESHOLD = 4;
+  const onFabPointerDown = (e: any) => {
+    suppressClick = false; // 防止上一次拖动的残留标记误吞下一次点击
+    if (e.button !== 0) return; // 仅响应左键
+    const rect = fab.getBoundingClientRect();
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    fabStartLeft = rect.left;
+    fabStartTop = rect.top;
+    dragging = true;
+    moved = false;
+    try { fab.setPointerCapture(e.pointerId); } catch (_) {}
+    e.stopPropagation();
+  };
+  const onFabPointerMove = (e: any) => {
+    if (!dragging) return;
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+    if (!moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return; // 小于阈值视为点击
+    moved = true;
+    const w = fab.offsetWidth, h = fab.offsetHeight;
+    let left = Math.max(4, Math.min(window.innerWidth - w - 4, fabStartLeft + dx));
+    let top = Math.max(4, Math.min(window.innerHeight - h - 4, fabStartTop + dy));
+    fab.style.left = left + "px";
+    fab.style.top = top + "px";
+    fab.style.right = "auto";
+    fab.style.bottom = "auto";
+  };
+  const onFabPointerUp = (e: any) => {
+    if (!dragging) return;
+    dragging = false;
+    try { fab.releasePointerCapture(e.pointerId); } catch (_) {}
+    if (moved) {
+      // 拖动结束：保存位置，并抑制随后的 click（避免误触开/关弹窗）
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify({ left: parseFloat(fab.style.left), top: parseFloat(fab.style.top) }));
+      } catch (_) {}
+      suppressClick = true;
+    }
+  };
+  fab.addEventListener("pointerdown", onFabPointerDown);
+  fab.addEventListener("pointermove", onFabPointerMove);
+  fab.addEventListener("pointerup", onFabPointerUp);
+  fab.addEventListener("pointercancel", onFabPointerUp);
+
   function renderHome() {
     view.innerHTML = "";
     const grid = el("div", { class: "kirameku-toolbox-grid" });
@@ -1230,6 +1289,17 @@ export function initToolbox(root: HTMLElement): () => void {
 
   function openPopup() {
     isOpen = true;
+    // 弹窗跟随悬浮按钮位置：显示在按钮正上方，按钮被拖动后弹窗随之移动
+    const r = fab.getBoundingClientRect();
+    const pw = popup.offsetWidth || 360;
+    const ph = popup.offsetHeight || 480;
+    let left = Math.max(8, Math.min(window.innerWidth - pw - 8, r.left));
+    let top = r.top - ph - 16;
+    if (top < 8) top = 8;
+    popup.style.left = left + "px";
+    popup.style.top = top + "px";
+    popup.style.right = "auto";
+    popup.style.bottom = "auto";
     popup.classList.add("kirameku-toolbox-show");
     fab.classList.add("kirameku-toolbox-open");
     if (view.children.length === 0) renderHome();
@@ -1244,8 +1314,12 @@ export function initToolbox(root: HTMLElement): () => void {
   }
   function togglePopup() { isOpen ? closePopup() : openPopup(); }
 
-  // 悬浮按钮点击：切换弹窗（阻止冒泡，避免触发 document 的外部关闭）
-  fab.addEventListener("click", (e: any) => { e.stopPropagation(); togglePopup(); });
+  // 悬浮按钮点击：切换弹窗（拖动结束后 suppressClick 为 true，本次 click 不触发切换）
+  fab.addEventListener("click", (e: any) => {
+    e.stopPropagation();
+    if (suppressClick) { suppressClick = false; return; }
+    togglePopup();
+  });
   // 弹窗内部点击不关闭
   popup.addEventListener("click", (e: any) => e.stopPropagation());
   // 点击弹窗外部区域关闭弹窗

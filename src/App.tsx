@@ -11,6 +11,7 @@ import Sakura from './components/Sakura'
 import TopProgressBar from './components/TopProgressBar'
 import WelcomeOverlay from './components/WelcomeOverlay'
 import MusicPlayer from './components/MusicPlayer'
+import Toolbox from './components/Toolbox'
 import ClickEffect from './components/ClickEffect'
 import MouseTrail from './components/MouseTrail'
 import PasscodeGate from './components/PasscodeGate'
@@ -75,6 +76,8 @@ export default function App() {
         <Footer />
         <Sidebar />
         <MusicPlayer />
+        {/* 全局悬浮工具箱：所有页面（含非首页板块）左下角均可出现，支持拖动 */}
+        <Toolbox />
         <ClickEffect />
         <MouseTrail />
       </SettingsProvider>

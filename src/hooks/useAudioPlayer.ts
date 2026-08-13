@@ -49,6 +49,7 @@ export interface AudioControls extends AudioState {
   setMode: (m: PlayMode) => void
   setCurrentIndex: (i: number) => void
   seek: (ratio: number) => void
+  setSeeking: (v: boolean) => void
   togglePanel: () => void
   setShowPanel: (v: boolean) => void
 }
@@ -70,6 +71,7 @@ export function useAudioPlayer(tracks: Track[]): AudioControls {
   const modeRef = useRef<PlayMode>('order')
   const tracksRef = useRef<Track[]>(safeTracks)
   const historyRef = useRef<number[]>([]) // 随机模式的上一首历史
+  const seekingRef = useRef(false) // 拖动进度条时为 true，屏蔽 timeupdate 覆盖显示值
 
   const [currentIndex, setCurrentIndexState] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -109,7 +111,10 @@ export function useAudioPlayer(tracks: Track[]): AudioControls {
     audio.volume = volume
     audioRef.current = audio
 
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const onTimeUpdate = () => {
+      // 拖动进度条期间不更新显示值，避免与拖动位置「打架」导致进度条抖动/回跳
+      if (!seekingRef.current) setCurrentTime(audio.currentTime)
+    }
     const onLoadedMetadata = () => setDuration(audio.duration || 0)
     const onPlay = () => setIsPlaying(true)
     const onPause = () => setIsPlaying(false)
@@ -249,6 +254,10 @@ export function useAudioPlayer(tracks: Track[]): AudioControls {
     setCurrentTime(t)
   }, [duration])
 
+  const setSeeking = useCallback((v: boolean) => {
+    seekingRef.current = v
+  }, [])
+
   const togglePanel = useCallback(() => setShowPanel((v) => !v), [])
   const setShowPanelSafe = useCallback((v: boolean) => setShowPanel(v), [])
 
@@ -274,6 +283,7 @@ export function useAudioPlayer(tracks: Track[]): AudioControls {
     setMode,
     setCurrentIndex,
     seek,
+    setSeeking,
     togglePanel,
     setShowPanel: setShowPanelSafe,
   }

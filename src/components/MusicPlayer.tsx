@@ -58,30 +58,43 @@ export default function MusicPlayer() {
   const progressRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
+  const [dragRatio, setDragRatio] = useState<number | null>(null) // 拖动中的临时进度（高于真实进度）
+  const dragRef = useRef(false) // 拖动中标记（用 ref 避免闭包过期）
+  const rectRef = useRef<DOMRect | null>(null) // 按下时缓存命中区尺寸，拖动期间不因高度变化而错位
 
   // —— 进度条拖拽 ——
-  const seekFromClientX = useCallback(
-    (clientX: number) => {
-      if (!progressRef.current || !player.duration) return
-      const rect = progressRef.current.getBoundingClientRect()
-      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-      player.seek(ratio)
-    },
-    [player],
-  )
+  // 命中区（外层）高度固定，内层细线 4px↔10px 仅是视觉，不影响坐标换算
+  const computeRatio = (clientX: number): number => {
+    const rect = rectRef.current
+    if (!rect || rect.width === 0) return 0
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+  }
+  const applySeek = (clientX: number) => {
+    const ratio = computeRatio(clientX)
+    setDragRatio(ratio)
+    player.seek(ratio)
+  }
 
   const onBarPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (!player.duration) return
     e.currentTarget.setPointerCapture(e.pointerId)
+    rectRef.current = e.currentTarget.getBoundingClientRect()
+    dragRef.current = true
     setDragging(true)
-    seekFromClientX(e.clientX)
+    player.setSeeking(true) // 拖动期间屏蔽 timeupdate，防止进度条回跳
+    applySeek(e.clientX) // 按下即跳转：点哪播哪
   }
   const onBarPointerMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (dragging) seekFromClientX(e.clientX)
+    if (!dragRef.current) return
+    applySeek(e.clientX) // 按住左键平滑拖动到目标位置
   }
   const onBarPointerUp = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+    if (!dragRef.current) return
+    dragRef.current = false
     setDragging(false)
+    setDragRatio(null)
+    player.setSeeking(false)
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
   }
 
   // —— 导入本地文件（本会话有效）——
@@ -129,6 +142,8 @@ export default function MusicPlayer() {
   )
 
   const hasTracks = tracks.length > 0
+  // 拖动时显示拖动位置，否则显示真实播放进度
+  const displayProgress = dragRatio ?? player.progress
   const ModeIcon = MODE_META[player.mode].Icon
   const currentCover = player.currentTrack.cover || defaultCover
 
@@ -255,6 +270,8 @@ export default function MusicPlayer() {
 
             {/* 进度条（可拖拽） */}
             <div style={{ marginBottom: '0.8rem' }}>
+              {/* 外层为固定高度命中区（16px），方便细线也能轻松点中；
+                  内层细线 4px↔10px 仅视觉变化，坐标换算基于外层，永不因高度变化错位 */}
               <div
                 ref={progressRef}
                 onPointerDown={onBarPointerDown}
@@ -263,41 +280,51 @@ export default function MusicPlayer() {
                 onPointerCancel={onBarPointerUp}
                 style={{
                   position: 'relative',
-                  height: dragging ? 10 : 4,
-                  borderRadius: 999,
-                  background: 'rgba(0,0,0,0.08)',
+                  height: 16,
+                  display: 'flex',
+                  alignItems: 'center',
                   cursor: 'pointer',
-                  overflow: 'visible',
-                  transition: 'height 0.12s ease',
                   touchAction: 'none',
                 }}
               >
                 <div
                   style={{
-                    height: '100%',
-                    width: `${player.progress * 100}%`,
-                    background: theme.colors.primary,
+                    position: 'relative',
+                    width: '100%',
+                    height: dragging ? 10 : 4,
                     borderRadius: 999,
-                    transition: dragging ? 'none' : 'width 0.1s linear',
+                    background: 'rgba(0,0,0,0.08)',
+                    overflow: 'visible',
+                    transition: 'height 0.12s ease',
                   }}
-                />
-                {/* 拖拽时显示的滑块 */}
-                {dragging && (
-                  <span
+                >
+                  <div
                     style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: `${player.progress * 100}%`,
-                      transform: 'translate(-50%, -50%)',
-                      width: 14,
-                      height: 14,
-                      borderRadius: '50%',
-                      background: '#fff',
-                      border: `3px solid ${theme.colors.primary}`,
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                      height: '100%',
+                      width: `${displayProgress * 100}%`,
+                      background: theme.colors.primary,
+                      borderRadius: 999,
+                      transition: dragging ? 'none' : 'width 0.1s linear',
                     }}
                   />
-                )}
+                  {/* 拖拽时显示的滑块 */}
+                  {dragging && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: `${displayProgress * 100}%`,
+                        transform: 'translate(-50%, -50%)',
+                        width: 14,
+                        height: 14,
+                        borderRadius: '50%',
+                        background: '#fff',
+                        border: `3px solid ${theme.colors.primary}`,
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  )}
+                </div>
               </div>
               <div
                 style={{
