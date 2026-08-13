@@ -2,16 +2,15 @@
  * ============================================================================
  *  components/MusicPlayer.tsx —— 右下角音乐播放器
  * ----------------------------------------------------------------------------
- *  替换原 Sidebar 的 GitHub 按钮。
- *  支持：
- *    1. 导入本地音乐文件（file input，浏览器临时播放）
- *    2. 播放 / 暂停 / 上一首 / 下一首 / 单曲循环 / 音量 / 进度条 / 播放列表
- *  注意：浏览器安全策略限制，file input 导入的音频刷新后需重新导入；
- *        若要持久保存，请把 mp3 放进 public/music/ 并在 musicList.ts 配置。
+ *  - 歌单 = 自动扫描的 src/assets/music/（持久化） + 本会话导入的本地文件
+ *  - 播放 / 暂停 / 上一首 / 下一首（全部可用）
+ *  - 播放模式：顺序 / 列表循环 / 单曲循环 / 随机（循环切换按钮）
+ *  - 音量调节、可拖拽进度条（拖动时变粗并显示滑块，松手恢复细线）
+ *  - 播放列表点击即播、可移除本会话导入的歌曲
  * ============================================================================
  */
 
-import { useRef, useCallback, type CSSProperties, type ChangeEvent } from 'react'
+import { useMemo, useRef, useState, useCallback, type CSSProperties, type ChangeEvent, type PointerEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Music,
@@ -19,17 +18,20 @@ import {
   Pause,
   SkipBack,
   SkipForward,
-  Repeat,
   Volume2,
   VolumeX,
   X,
   ListMusic,
   Plus,
   Disc,
+  Shuffle,
+  Repeat,
+  Repeat1,
+  ListOrdered,
 } from 'lucide-react'
 import theme from '../config/theme.config'
-import { useAudioPlayer } from '../hooks/useAudioPlayer'
-import { useSetting } from '../hooks/useSettings'
+import { useAudioPlayer, type PlayMode } from '../hooks/useAudioPlayer'
+import { MUSIC_LIBRARY, type Track } from '../data/musicList'
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00'
@@ -38,26 +40,56 @@ function formatTime(seconds: number): string {
   return `${m}:${s < 10 ? '0' + s : s}`
 }
 
-const defaultCover = 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&w=320&q=80'
+const MODE_META: Record<PlayMode, { label: string; Icon: typeof Repeat }> = {
+  order: { label: '顺序播放', Icon: ListOrdered },
+  loop: { label: '列表循环', Icon: Repeat },
+  single: { label: '单曲循环', Icon: Repeat1 },
+  shuffle: { label: '随机播放', Icon: Shuffle },
+}
+
+const defaultCover =
+  'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&w=320&q=80'
 
 export default function MusicPlayer() {
-  const [tracks, setTracks] = useSetting('tracks')
+  const [userTracks, setUserTracks] = useState<Track[]>([])
+  const tracks = useMemo<Track[]>(() => [...MUSIC_LIBRARY, ...userTracks], [userTracks])
   const player = useAudioPlayer(tracks)
+
   const progressRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging] = useState(false)
 
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressRef.current || !player.duration) return
-    const rect = progressRef.current.getBoundingClientRect()
-    const ratio = (e.clientX - rect.left) / rect.width
-    player.seek(ratio)
+  // —— 进度条拖拽 ——
+  const seekFromClientX = useCallback(
+    (clientX: number) => {
+      if (!progressRef.current || !player.duration) return
+      const rect = progressRef.current.getBoundingClientRect()
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+      player.seek(ratio)
+    },
+    [player],
+  )
+
+  const onBarPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (!player.duration) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setDragging(true)
+    seekFromClientX(e.clientX)
+  }
+  const onBarPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (dragging) seekFromClientX(e.clientX)
+  }
+  const onBarPointerUp = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+    setDragging(false)
   }
 
+  // —— 导入本地文件（本会话有效）——
   const handleFileChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files
       if (!files || files.length === 0) return
-      const newTracks = Array.from(files).map((file) => {
+      const newTracks: Track[] = Array.from(files).map((file) => {
         const title = file.name.replace(/\.[^/.]+$/, '')
         return {
           id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -67,31 +99,38 @@ export default function MusicPlayer() {
           src: URL.createObjectURL(file),
         }
       })
-      setTracks([...tracks, ...newTracks])
-      // 如果当前没有播放，自动播放最后一首导入的
-      if (!player.isPlaying && newTracks.length > 0) {
-        setTimeout(() => {
-          player.setCurrentIndex(tracks.length + newTracks.length - 1)
-          player.play()
-        }, 0)
-      }
+      setUserTracks((prev) => [...prev, ...newTracks])
       e.target.value = ''
     },
-    [tracks, setTracks, player],
+    [],
   )
 
   const removeTrack = useCallback(
     (idx: number) => {
-      const next = tracks.filter((_, i) => i !== idx)
-      setTracks(next)
-      if (idx < player.currentIndex) {
-        player.setCurrentIndex(player.currentIndex - 1)
-      } else if (idx === player.currentIndex) {
-        player.setCurrentIndex(Math.min(idx, Math.max(0, next.length - 1)))
-      }
+      if (idx < MUSIC_LIBRARY.length) return // 内置歌单不可移除
+      const userIdx = idx - MUSIC_LIBRARY.length
+      const nextUser = userTracks.filter((_, i) => i !== userIdx)
+      setUserTracks(nextUser)
+      const total = MUSIC_LIBRARY.length + nextUser.length
+      if (idx < player.currentIndex) player.setCurrentIndex(player.currentIndex - 1)
+      else if (idx === player.currentIndex)
+        player.setCurrentIndex(Math.max(0, Math.min(player.currentIndex, total - 1)))
     },
-    [tracks, setTracks, player],
+    [player, userTracks],
   )
+
+  const playIndex = useCallback(
+    (idx: number) => {
+      player.setCurrentIndex(idx)
+      // 等待音源切换（src effect）后再播放，确保播放的是目标曲
+      window.setTimeout(() => player.play(), 0)
+    },
+    [player],
+  )
+
+  const hasTracks = tracks.length > 0
+  const ModeIcon = MODE_META[player.mode].Icon
+  const currentCover = player.currentTrack.cover || defaultCover
 
   const btnBase: CSSProperties = {
     width: 46,
@@ -122,9 +161,6 @@ export default function MusicPlayer() {
     color: theme.colors.textDark,
     overflow: 'hidden',
   }
-
-  const hasTracks = tracks.length > 0
-  const currentCover = player.currentTrack.cover || defaultCover
 
   return (
     <div style={{ position: 'fixed', bottom: 40, right: 24, zIndex: 9999 }}>
@@ -212,22 +248,28 @@ export default function MusicPlayer() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {player.currentTrack.artist}
+                  {player.currentTrack.artist || '未知歌手'}
                 </p>
               </div>
             </div>
 
-            {/* 进度条 */}
+            {/* 进度条（可拖拽） */}
             <div style={{ marginBottom: '0.8rem' }}>
               <div
                 ref={progressRef}
-                onClick={handleProgressClick}
+                onPointerDown={onBarPointerDown}
+                onPointerMove={onBarPointerMove}
+                onPointerUp={onBarPointerUp}
+                onPointerCancel={onBarPointerUp}
                 style={{
-                  height: 5,
+                  position: 'relative',
+                  height: dragging ? 10 : 4,
                   borderRadius: 999,
                   background: 'rgba(0,0,0,0.08)',
                   cursor: 'pointer',
-                  overflow: 'hidden',
+                  overflow: 'visible',
+                  transition: 'height 0.12s ease',
+                  touchAction: 'none',
                 }}
               >
                 <div
@@ -236,9 +278,26 @@ export default function MusicPlayer() {
                     width: `${player.progress * 100}%`,
                     background: theme.colors.primary,
                     borderRadius: 999,
-                    transition: 'width 0.1s linear',
+                    transition: dragging ? 'none' : 'width 0.1s linear',
                   }}
                 />
+                {/* 拖拽时显示的滑块 */}
+                {dragging && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: `${player.progress * 100}%`,
+                      transform: 'translate(-50%, -50%)',
+                      width: 14,
+                      height: 14,
+                      borderRadius: '50%',
+                      background: '#fff',
+                      border: `3px solid ${theme.colors.primary}`,
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                    }}
+                  />
+                )}
               </div>
               <div
                 style={{
@@ -264,20 +323,27 @@ export default function MusicPlayer() {
                 marginBottom: '0.9rem',
               }}
             >
+              {/* 播放模式切换 */}
               <button
-                onClick={player.toggleLoop}
-                title={player.isLooping ? '单曲循环中' : '顺序播放'}
+                onClick={player.cycleMode}
+                title={MODE_META[player.mode].label}
                 style={{
                   background: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  color: player.isLooping ? theme.colors.primary : theme.colors.textMuted,
+                  color: theme.colors.primary,
                   padding: 6,
                   borderRadius: '50%',
                   transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
                 }}
               >
-                <Repeat size={18} />
+                <ModeIcon size={18} />
+                <span style={{ fontSize: '0.7rem', fontFamily: theme.fonts.serif }}>
+                  {MODE_META[player.mode].label}
+                </span>
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -331,6 +397,7 @@ export default function MusicPlayer() {
 
               <button
                 onClick={() => player.setVolume(player.volume === 0 ? 0.6 : 0)}
+                title={player.volume === 0 ? '取消静音' : '静音'}
                 style={{
                   background: 'transparent',
                   border: 'none',
@@ -355,6 +422,9 @@ export default function MusicPlayer() {
                 onChange={(e) => player.setVolume(parseFloat(e.target.value))}
                 style={{ flex: 1, accentColor: theme.colors.primary, cursor: 'pointer' }}
               />
+              <span style={{ fontSize: '0.7rem', color: theme.colors.textMuted, width: 30, textAlign: 'right' }}>
+                {Math.round(player.volume * 100)}%
+              </span>
             </div>
 
             {/* 导入按钮 */}
@@ -378,7 +448,7 @@ export default function MusicPlayer() {
                 transition: 'all 0.2s',
               }}
             >
-              <Plus size={16} /> 导入本地音乐
+              <Plus size={16} /> 导入本地音乐（本会话）
             </button>
 
             {/* 播放列表 */}
@@ -386,7 +456,7 @@ export default function MusicPlayer() {
               style={{
                 borderTop: '1px solid rgba(0,0,0,0.06)',
                 paddingTop: '0.8rem',
-                maxHeight: 160,
+                maxHeight: 200,
                 overflowY: 'auto',
               }}
             >
@@ -405,7 +475,7 @@ export default function MusicPlayer() {
               </p>
               {tracks.length === 0 && (
                 <p style={{ fontSize: '0.75rem', color: theme.colors.textMuted, textAlign: 'center', margin: '0.5rem 0' }}>
-                  暂无音乐，点击上方导入
+                  暂无音乐
                 </p>
               )}
               {tracks.map((track, idx) => (
@@ -422,7 +492,7 @@ export default function MusicPlayer() {
                   }}
                 >
                   <button
-                    onClick={() => player.setCurrentIndex(idx)}
+                    onClick={() => playIndex(idx)}
                     style={{
                       flex: 1,
                       textAlign: 'left',
@@ -456,23 +526,26 @@ export default function MusicPlayer() {
                       }}
                     >
                       {track.title}
+                      {track.artist ? ` · ${track.artist}` : ''}
                     </span>
                   </button>
-                  <button
-                    onClick={() => removeTrack(idx)}
-                    title="移除"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: theme.colors.textMuted,
-                      cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                    }}
-                  >
-                    ×
-                  </button>
+                  {idx >= MUSIC_LIBRARY.length && (
+                    <button
+                      onClick={() => removeTrack(idx)}
+                      title="移除"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: theme.colors.textMuted,
+                        cursor: 'pointer',
+                        fontSize: '0.75rem',
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
