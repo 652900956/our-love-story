@@ -17,7 +17,6 @@ import {
   User,
   Heart,
   MessageSquareText,
-  Clock,
   Sparkles,
   MousePointer2,
   Image as ImageIcon,
@@ -131,8 +130,11 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
       femaleAvatar: local.femaleAvatar,
       maleName: local.maleName,
       femaleName: local.femaleName,
+      maleTag: local.maleTag,
+      femaleTag: local.femaleTag,
+      maleIntro: local.maleIntro,
+      femaleIntro: local.femaleIntro,
       slogan: local.slogan,
-      togetherSince: local.togetherSince,
       clickEffectEnabled: local.clickEffectEnabled,
       clickEffectType: local.clickEffectType,
       trailEnabled: local.trailEnabled,
@@ -302,7 +304,7 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   {(['maleAvatar', 'femaleAvatar'] as const).map((field) => {
                     const isMale = field === 'maleAvatar'
-                    const label = isMale ? 'Ta' : '我'
+                    const label = isMale ? '男主人' : '女主人'
                     const inputRef = isMale ? maleInputRef : femaleInputRef
                     return (
                       <div key={field} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -356,18 +358,7 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                         />
                         <input
                           type="text"
-                          placeholder="或粘贴图片链接"
-                          value={local[field]}
-                          onChange={(e) => setLocal((prev) => ({ ...prev, [field]: e.target.value }))}
-                          style={{
-                            ...inputStyle,
-                            fontSize: '0.8rem',
-                            padding: '0.45rem 0.6rem',
-                          }}
-                        />
-                        <input
-                          type="text"
-                          placeholder={isMale ? 'Ta 的称呼' : '我的称呼'}
+                          placeholder={isMale ? '男主人昵称' : '女主人昵称'}
                           value={isMale ? local.maleName : local.femaleName}
                           onChange={(e) =>
                             setLocal((prev) => ({
@@ -380,6 +371,40 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                             fontSize: '0.8rem',
                             padding: '0.45rem 0.6rem',
                             textAlign: 'center',
+                          }}
+                        />
+                        <input
+                          type="text"
+                          placeholder={isMale ? '男主人标签（橙色）' : '女主人标签（橙色）'}
+                          value={isMale ? local.maleTag : local.femaleTag}
+                          onChange={(e) =>
+                            setLocal((prev) => ({
+                              ...prev,
+                              [isMale ? 'maleTag' : 'femaleTag']: e.target.value,
+                            }))
+                          }
+                          style={{
+                            ...inputStyle,
+                            fontSize: '0.8rem',
+                            padding: '0.45rem 0.6rem',
+                            textAlign: 'center',
+                          }}
+                        />
+                        <textarea
+                          placeholder={isMale ? '男主人简介（灰色）' : '女主人简介（灰色）'}
+                          value={isMale ? local.maleIntro : local.femaleIntro}
+                          onChange={(e) =>
+                            setLocal((prev) => ({
+                              ...prev,
+                              [isMale ? 'maleIntro' : 'femaleIntro']: e.target.value,
+                            }))
+                          }
+                          rows={2}
+                          style={{
+                            ...inputStyle,
+                            fontSize: '0.8rem',
+                            padding: '0.45rem 0.6rem',
+                            resize: 'none',
                           }}
                         />
                       </div>
@@ -399,22 +424,6 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                   onChange={(e) => setLocal((prev) => ({ ...prev, slogan: e.target.value }))}
                   style={inputStyle}
                 />
-              </section>
-
-              {/* 相爱时间 */}
-              <section style={fieldStyle}>
-                <label style={labelStyle}>
-                  <Clock size={14} /> 正式相爱时间
-                </label>
-                <input
-                  type="datetime-local"
-                  value={local.togetherSince.slice(0, 16)}
-                  onChange={(e) => setLocal((prev) => ({ ...prev, togetherSince: e.target.value + ':00' }))}
-                  style={inputStyle}
-                />
-                <p style={{ margin: 0, fontSize: '0.75rem', color: theme.colors.textMuted }}>
-                  修改后首页「我们一起走过的」时间会立即重新计算。
-                </p>
               </section>
 
               {/* 鼠标特效 */}

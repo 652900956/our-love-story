@@ -32,8 +32,8 @@ import {
 import { todayStr } from '../utils/date'
 
 const OWNERSHIP_META: Record<LedgerOwnership, { label: string; emoji: string }> = {
-  mine: { label: '我的', emoji: '👦' },
-  hers: { label: '女友', emoji: '👧' },
+  mine: { label: '男主人', emoji: '👦' },
+  hers: { label: '女主人', emoji: '👧' },
   shared: { label: '共同', emoji: '💑' },
 }
 const TYPE_META: Record<LedgerType, { label: string }> = {
@@ -189,8 +189,8 @@ export default function Ledger() {
 
       {/* 概览卡片 */}
       <div className="ledger-cards">
-        <SummaryCard emoji="👦" title="我的存款" value={fmt(overview.mineDep)} />
-        <SummaryCard emoji="👧" title="女友存款" value={fmt(overview.hersDep)} />
+        <SummaryCard emoji="👦" title="男主人存款" value={fmt(overview.mineDep)} />
+        <SummaryCard emoji="👧" title="女主人存款" value={fmt(overview.hersDep)} />
         <SummaryCard emoji="💑" title="共同余额" value={fmt(overview.sharedBalance)} accent />
         <SummaryCard emoji="📥" title="本月存款" value={fmt(monthStats.vmDep)} />
         <SummaryCard emoji="📤" title="本月支出" value={fmt(monthStats.vmExp)} />

@@ -20,10 +20,22 @@ export default function About() {
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
 
-  // 头像与称呼从 settings 读取，与首页同步
+  // 头像、称呼、标签与简介从 settings 读取，与设置面板同步
   const couple = [
-    { ...about.couple.he, name: settings.maleName, avatar: settings.maleAvatar },
-    { ...about.couple.she, name: settings.femaleName, avatar: settings.femaleAvatar },
+    {
+      ...about.couple.he,
+      name: settings.maleName,
+      avatar: settings.maleAvatar,
+      tag: settings.maleTag,
+      intro: settings.maleIntro,
+    },
+    {
+      ...about.couple.she,
+      name: settings.femaleName,
+      avatar: settings.femaleAvatar,
+      tag: settings.femaleTag,
+      intro: settings.femaleIntro,
+    },
   ]
 
   const cardStyle: CSSProperties = {

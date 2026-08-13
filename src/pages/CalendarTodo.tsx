@@ -24,8 +24,8 @@ import {
 import { todayStr } from '../utils/date'
 
 const CATEGORY_META: Record<TodoCategory, { label: string; emoji: string }> = {
-  mine: { label: '我的待办', emoji: '👦' },
-  hers: { label: '女友待办', emoji: '👧' },
+  mine: { label: '男主人待办', emoji: '👦' },
+  hers: { label: '女主人待办', emoji: '👧' },
   shared: { label: '共同待办', emoji: '💑' },
 }
 const CATEGORIES: TodoCategory[] = ['mine', 'hers', 'shared']
@@ -167,7 +167,7 @@ export default function CalendarTodo() {
     <PageShell>
       <PageHeader title="日历 & 待办" subtitle="阳历与农历同行，记录我们的每一天与每件事" />
       <p className="page-intro" style={{ color: theme.colors.textMuted }}>
-        点击日历中的任意日期，即可添加当天的备注；下方按「我 / 女友 / 我们」分板块管理待办，支持优先级与筛选。
+        点击日历中的任意日期，即可添加当天的备注；下方按「男主人 / 女主人 / 我们」分板块管理待办，支持优先级与筛选。
       </p>
 
       {/* 日历 */}

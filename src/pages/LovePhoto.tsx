@@ -6,6 +6,7 @@ import PageHeader from '../components/PageHeader'
 import theme from '../config/theme.config'
 import { isSupabaseConfigured } from '../config/supabase'
 import { fetchPhotos, addPhoto, deletePhoto, subscribePhotos } from '../api/photos'
+import { todayStr } from '../utils/date'
 import type { PhotoItem } from '../data/photoList'
 
 /**
@@ -23,7 +24,7 @@ export default function LovePhoto() {
   const [addOpen, setAddOpen] = useState(false)
   const [newSrc, setNewSrc] = useState('')
   const [newCaption, setNewCaption] = useState('')
-  const [newDate, setNewDate] = useState('')
+  const [newDate, setNewDate] = useState(todayStr())
   const [newNote, setNewNote] = useState('')
   const [adding, setAdding] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -76,7 +77,7 @@ export default function LovePhoto() {
     setAdding(false)
     setNewSrc('')
     setNewCaption('')
-    setNewDate('')
+    setNewDate(todayStr())
     setNewNote('')
     setAddOpen(false)
     reload()
@@ -219,10 +220,10 @@ export default function LovePhoto() {
                   style={{ ...addInputStyle, flex: 2, minWidth: 160 }}
                 />
                 <input
+                  type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  placeholder="日期，如 2025-08-17"
-                  style={{ ...addInputStyle, flex: 1, minWidth: 140 }}
+                  style={{ ...addInputStyle, flex: 1, minWidth: 140, color: theme.colors.textDark, background: theme.colors.bgCard }}
                 />
               </div>
               <input

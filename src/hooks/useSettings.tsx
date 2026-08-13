@@ -39,6 +39,11 @@ export interface LoveySettings {
   slogan: string
   /** 正式相爱时间，用于首页计时器 */
   togetherSince: string
+  /** 关于我们页 — 男主人 / 女主人标签与简介 */
+  maleTag: string
+  femaleTag: string
+  maleIntro: string
+  femaleIntro: string
   /** 关于我们页里程碑 */
   milestones: AboutMilestone[]
   /** 点点滴滴日记 */
@@ -68,6 +73,10 @@ export const defaultSettings: LoveySettings = {
   femaleName: hero.female.name,
   slogan: header.slogan,
   togetherSince,
+  maleTag: about.couple.he.tag,
+  femaleTag: about.couple.she.tag,
+  maleIntro: about.couple.he.intro,
+  femaleIntro: about.couple.she.intro,
   milestones: about.milestones,
   littleItems: little.items,
   tracks: musicList,

@@ -13,6 +13,7 @@ import {
   subscribeLittle,
   littleIsCloud,
 } from '../api/little'
+import { todayStr } from '../utils/date'
 import type { LittleItem } from '../data/littleContent'
 
 /** 可爱的自动 mood 图标池（用户添加自定义内容时随机分配，保持原有可爱风格） */
@@ -43,7 +44,7 @@ export default function Little() {
   const [showForm, setShowForm] = useState(false)
   // 视图切换：默认保留原有的「列表」样式，新增「时间线」可选视图
   const [view, setView] = useState<'list' | 'timeline'>('list')
-  const [date, setDate] = useState('')
+  const [date, setDate] = useState(todayStr())
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [mood, setMood] = useState('')
@@ -67,7 +68,7 @@ export default function Little() {
       mood: mood.trim() || randomMood(),
     })
     load()
-    setDate('')
+    setDate(todayStr())
     setTitle('')
     setContent('')
     setMood('')
@@ -187,8 +188,7 @@ export default function Little() {
           >
             <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
               <input
-                type="text"
-                placeholder="日期，如 2025-08-17"
+                type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
@@ -201,6 +201,8 @@ export default function Little() {
                   fontFamily: theme.fonts.serif,
                   fontSize: '0.95rem',
                   outline: 'none',
+                  color: theme.colors.textDark,
+                  background: theme.colors.bgCard,
                 }}
               />
               <input
