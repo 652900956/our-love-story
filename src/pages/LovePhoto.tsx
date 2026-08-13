@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, type FormEvent } from 'react'
+import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Upload } from 'lucide-react'
 import PageShell from '../components/PageShell'
 import PageHeader from '../components/PageHeader'
 import theme from '../config/theme.config'
@@ -26,6 +26,17 @@ export default function LovePhoto() {
   const [newDate, setNewDate] = useState('')
   const [newNote, setNewNote] = useState('')
   const [adding, setAdding] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    try {
+      const dataUrl = await readFileAsDataURL(file)
+      setNewSrc(dataUrl)
+    } catch {
+      // ignore
+    }
+  }
 
   // 重新拉取第一页（首屏 + 实时变更都走这里）
   const reload = useCallback(async () => {
@@ -144,11 +155,60 @@ export default function LovePhoto() {
                 gap: '0.7rem',
               }}
             >
+              {/* 本地上传区域（参照头像上传交互） */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  width: '100%',
+                  height: 160,
+                  borderRadius: theme.radius.card,
+                  border: `1.5px dashed ${theme.colors.primary}`,
+                  background: `${theme.colors.primary}10`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  position: 'relative',
+                }}
+              >
+                {newSrc ? (
+                  <img
+                    src={newSrc}
+                    alt="预览"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 8,
+                      color: theme.colors.primary,
+                      fontFamily: theme.fonts.serif,
+                    }}
+                  >
+                    <Upload size={32} />
+                    <span>点击选择本地图片</span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) handleFileSelect(file)
+                  e.target.value = ''
+                }}
+              />
               <input
                 value={newSrc}
                 onChange={(e) => setNewSrc(e.target.value)}
-                placeholder="图片 URL（必填，支持任意图床链接）"
-                required
+                placeholder="或粘贴图片链接（图床 URL）"
                 style={addInputStyle}
               />
               <div style={{ display: 'flex', gap: '0.7rem', flexWrap: 'wrap' }}>
@@ -423,6 +483,16 @@ export default function LovePhoto() {
       </AnimatePresence>
     </PageShell>
   )
+}
+
+// ── 本地图片转 Data URL（与 SettingsPanel 头像上传保持一致） ──
+function readFileAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 
 // ── 添加照片表单样式（颜色取自 theme） ──

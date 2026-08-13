@@ -8,7 +8,7 @@
  */
 
 /** 在一起起始时间，用于 LoveTimer 实时计数 */
-export const togetherSince = '2025-08-17T02:31:21'
+export const togetherSince = '2024-08-17T02:31:21'
 
 export interface HeroPerson {
   name: string
@@ -21,11 +21,11 @@ export const hero = {
   background:
     'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1600&q=80',
   male: {
-    name: 'Ki',
+    name: '磊磊',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=320&q=80',
   } satisfies HeroPerson,
   female: {
-    name: 'Li',
+    name: '聪聪',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=80',
   } satisfies HeroPerson,
 }

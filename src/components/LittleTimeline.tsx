@@ -12,7 +12,7 @@ const TRACK_H = 520
 const CENTER_Y = 260
 const AMP = 78
 const GAP = 360
-const PAD_X = 90
+const PAD_X = 240
 const CARD_W = 280
 const CARD_H = 150
 const CONNECTOR = 24
@@ -22,8 +22,19 @@ export default function LittleTimeline({ items }: LittleTimelineProps) {
   const [isDragging, setIsDragging] = useState(false)
   const dragStart = useRef({ x: 0, scroll: 0 })
 
-  // 时间线从左到右按时间顺序：最旧在左、最新在右（新增会向右延伸）
-  const chronological = useMemo(() => [...items].reverse(), [items])
+  // 时间线从左到右按日期升序：最旧在左、最新在右（新增早于现有记录时自动插入左侧）
+  const chronological = useMemo(
+    () =>
+      [...items].sort((a, b) => {
+        const ta = new Date(a.date).getTime()
+        const tb = new Date(b.date).getTime()
+        if (Number.isNaN(ta) && Number.isNaN(tb)) return 0
+        if (Number.isNaN(ta)) return 1
+        if (Number.isNaN(tb)) return -1
+        return ta - tb
+      }),
+    [items],
+  )
 
   const totalW = useMemo(
     () => PAD_X * 2 + Math.max(0, chronological.length - 1) * GAP,

@@ -220,7 +220,8 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
               top: 0,
               right: 0,
               width: 'min(420px, 90vw)',
-              height: '100vh',
+              height: '100dvh',
+              maxHeight: '-webkit-fill-available',
               background: theme.colors.bgCard,
               boxShadow: '-8px 0 40px rgba(0,0,0,0.12)',
               zIndex: 10002,
@@ -273,7 +274,7 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
               style={{
                 flex: 1,
                 overflowY: 'auto',
-                padding: '1.4rem',
+                padding: '1.4rem 1.4rem calc(1.4rem + env(safe-area-inset-bottom, 0px))',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1.4rem',
@@ -573,11 +574,12 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             {/* 底部按钮 */}
             <div
               style={{
-                padding: '1rem 1.4rem',
+                padding: '1rem 1.4rem calc(1rem + env(safe-area-inset-bottom, 0px))',
                 borderTop: '1px solid rgba(0,0,0,0.06)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 gap: '0.8rem',
+                background: theme.colors.bgCard,
               }}
             >
               <button
