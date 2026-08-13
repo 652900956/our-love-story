@@ -198,6 +198,7 @@ ul {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: 2rem;
+  align-items: center;
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 1rem;

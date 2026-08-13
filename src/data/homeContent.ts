@@ -65,7 +65,7 @@ export interface HomeCard {
   /** 卡片副文案 */
   desc: string
   /** lucide-react 图标名（组件内映射） */
-  icon: 'Heart' | 'MessageCircle' | 'Users' | 'Images' | 'ListChecks'
+  icon: 'Heart' | 'MessageCircle' | 'Users' | 'Images' | 'ListChecks' | 'CalendarDays' | 'Wallet'
   /** 是否大卡片（占 1/2 宽，card-b） */
   wide?: boolean
 }
@@ -76,6 +76,8 @@ export const cards: HomeCard[] = [
   { id: 'about', to: '/about', title: '关于我们', desc: '我们之间认识的经历回忆', icon: 'Users' },
   { id: 'loveImg', to: '/love-img', title: 'Love Photo', desc: '恋爱相册 记录最美瞬间', icon: 'Images', wide: true },
   { id: 'list', to: '/list', title: 'Love List', desc: '恋爱列表 你我之间的约定', icon: 'ListChecks', wide: true },
+  { id: 'calendar', to: '/calendar', title: '日历待办', desc: '重要日子与待办 一起记住', icon: 'CalendarDays', wide: true },
+  { id: 'ledger', to: '/ledger', title: '记账本', desc: '共同记账 规划我们的小未来', icon: 'Wallet', wide: true },
 ]
 
 /** 页脚 */

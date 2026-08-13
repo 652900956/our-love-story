@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Heart, MessageCircle, Users, Images, ListChecks, type LucideIcon } from 'lucide-react'
+import { Heart, MessageCircle, Users, Images, ListChecks, CalendarDays, Wallet, type LucideIcon } from 'lucide-react'
 import theme from '../config/theme.config'
 import { cards, type HomeCard } from '../data/homeContent'
 
@@ -10,6 +10,8 @@ const iconMap: Record<HomeCard['icon'], LucideIcon> = {
   Users,
   Images,
   ListChecks,
+  CalendarDays,
+  Wallet,
 }
 
 const container = {
