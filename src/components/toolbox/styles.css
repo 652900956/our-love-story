@@ -1,0 +1,424 @@
+/* ============================================================================
+ * Kirameku 悬浮工具箱 · 隔离样式（迁移版）
+ * ----------------------------------------------------------------------------
+ * 全部选择器均以 kirameku-toolbox- 前缀，弹窗 z-index:9999，与宿主站点完全
+ * 隔离，绝不污染原站样式。
+ *
+ * 主题适配：原站使用 CSS 变量（--primary / --primary-soft / --bg-card /
+ * --text-* 等），由 index.css 的 :root 与 [data-theme="dark"] 提供真实色值。
+ * 本组件统一引用这些变量，因此会随整站「珊瑚色 + 明暗主题」自动协调，无需
+ * 单独维护一套配色。
+ * ========================================================================== */
+
+.kirameku-toolbox-fab,
+.kirameku-toolbox-popup,
+.kirameku-toolbox-fab *,
+.kirameku-toolbox-popup * {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* 圆形悬浮触发按钮（左下角） */
+.kirameku-toolbox-fab {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  /* 珊瑚色渐变：随明/暗主题自动取 --primary-hover → --primary */
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+  color: #fff;
+  font-size: 26px;
+  line-height: 56px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(241, 107, 79, 0.45);
+  z-index: 9998;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  user-select: none;
+}
+.kirameku-toolbox-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 30px rgba(241, 107, 79, 0.6);
+}
+.kirameku-toolbox-fab.kirameku-toolbox-open {
+  transform: rotate(45deg);
+}
+
+/* 弹窗容器 */
+.kirameku-toolbox-popup {
+  position: fixed;
+  left: 24px;
+  bottom: 92px;
+  width: 360px;
+  max-width: calc(100vw - 48px);
+  height: 480px;
+  max-height: calc(100vh - 130px);
+  background: var(--bg-card);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  color: var(--text-main);
+}
+.kirameku-toolbox-popup.kirameku-toolbox-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* 弹窗头部 */
+.kirameku-toolbox-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+  color: #fff;
+}
+.kirameku-toolbox-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.kirameku-toolbox-header-actions {
+  display: flex;
+  gap: 6px;
+}
+.kirameku-toolbox-iconbtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.kirameku-toolbox-iconbtn:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* 视图区域（主页网格 / 工具面板 / 说明文档） */
+.kirameku-toolbox-view {
+  flex: 1 1 auto;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 主页工具网格 */
+.kirameku-toolbox-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 12px;
+  height: 100%;
+  overflow-y: auto;
+  align-content: start;
+}
+.kirameku-toolbox-item {
+  border: 1px solid var(--primary-soft);
+  background: var(--bg-card-hover);
+  border-radius: 12px;
+  padding: 10px 4px 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+}
+.kirameku-toolbox-item:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+.kirameku-toolbox-item-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.kirameku-toolbox-item-name {
+  font-size: 11px;
+  color: var(--text-dark);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* 工具面板 */
+.kirameku-toolbox-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.kirameku-toolbox-panel-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--primary-soft);
+  background: var(--primary-soft);
+}
+.kirameku-toolbox-back {
+  border: none;
+  background: rgba(241, 107, 79, 0.16);
+  color: var(--primary);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.kirameku-toolbox-back:hover {
+  background: rgba(241, 107, 79, 0.28);
+}
+.kirameku-toolbox-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+.kirameku-toolbox-panel-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 14px;
+  color: var(--text-dark);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 通用表单元素 */
+.kirameku-toolbox-input,
+.kirameku-toolbox-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(241, 107, 79, 0.3);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  background: var(--bg-card);
+  color: var(--text-dark);
+}
+.kirameku-toolbox-input:focus,
+.kirameku-toolbox-select:focus {
+  border-color: var(--primary);
+}
+.kirameku-toolbox-btn {
+  border: none;
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.kirameku-toolbox-btn:hover { opacity: 0.9; }
+.kirameku-toolbox-btn.kirameku-toolbox-ghost {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.kirameku-toolbox-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.kirameku-toolbox-row > * { flex: 1; }
+.kirameku-toolbox-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+/* 加载 / 错误 / 空状态 */
+.kirameku-toolbox-loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 24px 0;
+}
+.kirameku-toolbox-loading::after {
+  content: "";
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin: 10px auto 0;
+  border: 3px solid rgba(241, 107, 79, 0.25);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: kirameku-toolbox-spin 0.8s linear infinite;
+}
+@keyframes kirameku-toolbox-spin { to { transform: rotate(360deg); } }
+.kirameku-toolbox-error {
+  background: #fff1f0;
+  border: 1px solid #ffccc7;
+  color: #cf1322;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.kirameku-toolbox-empty { color: var(--text-muted); text-align: center; padding: 20px 0; }
+
+/* 列表类结果 */
+.kirameku-toolbox-list { list-style: none; }
+.kirameku-toolbox-list li {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(241, 107, 79, 0.12);
+  font-size: 13px;
+}
+.kirameku-toolbox-list li:last-child { border-bottom: none; }
+.kirameku-toolbox-heat { color: #ff6b6b; font-size: 12px; margin-left: 6px; }
+.kirameku-toolbox-muted { color: var(--text-muted); font-size: 12px; }
+
+/* 卡片（GitHub / 天气等） */
+.kirameku-toolbox-card {
+  border: 1px solid rgba(241, 107, 79, 0.18);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--bg-card-hover);
+}
+.kirameku-toolbox-avatar {
+  width: 56px; height: 56px; border-radius: 50%; float: left; margin-right: 12px;
+}
+.kirameku-toolbox-clear { clear: both; }
+
+/* 图片工具 */
+.kirameku-toolbox-img {
+  width: 100%;
+  border-radius: 10px;
+  display: block;
+  margin-top: 8px;
+  background: var(--primary-soft);
+}
+
+/* 二维码 */
+.kirameku-toolbox-qr { text-align: center; }
+.kirameku-toolbox-qr svg { max-width: 220px; height: auto; }
+
+/* 计算器 */
+.kirameku-toolbox-calc-display {
+  width: 100%;
+  text-align: right;
+  font-size: 20px;
+  padding: 10px;
+  border: 1px solid rgba(241, 107, 79, 0.3);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: var(--bg-card-hover);
+  min-height: 44px;
+  word-break: break-all;
+  color: var(--text-dark);
+}
+.kirameku-toolbox-calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.kirameku-toolbox-calc-grid button {
+  padding: 12px 0;
+  border: 1px solid rgba(241, 107, 79, 0.22);
+  background: var(--bg-card-hover);
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  color: var(--text-dark);
+}
+.kirameku-toolbox-calc-grid button:hover { background: var(--primary-soft); }
+
+/* 日历 */
+.kirameku-toolbox-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  text-align: center;
+  font-size: 12px;
+}
+.kirameku-toolbox-cal-cell {
+  padding: 6px 0;
+  border-radius: 6px;
+}
+.kirameku-toolbox-cal-cell.kirameku-toolbox-cal-head { color: var(--text-muted); font-weight: 600; }
+.kirameku-toolbox-cal-cell.kirameku-toolbox-cal-today { background: var(--primary); color: #fff; }
+.kirameku-toolbox-cal-cell.kirameku-toolbox-cal-other { color: var(--text-muted); }
+
+/* 世界时间 / 时钟 */
+.kirameku-toolbox-clock-big {
+  font-size: 34px;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-dark);
+}
+.kirameku-toolbox-tz-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(241, 107, 79, 0.12);
+  font-size: 13px;
+}
+.kirameku-toolbox-tz-row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* 小游戏（贪吃蛇） */
+.kirameku-toolbox-snake-canvas {
+  display: block;
+  margin: 0 auto 8px;
+  background: #1e1e2e;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 300px;
+}
+.kirameku-toolbox-snake-tip { text-align: center; color: var(--text-muted); font-size: 12px; }
+
+/* 说明文档 */
+.kirameku-toolbox-docs h3 {
+  font-size: 14px;
+  margin: 14px 0 6px;
+  color: var(--primary);
+  border-left: 3px solid var(--primary);
+  padding-left: 8px;
+}
+.kirameku-toolbox-docs p,
+.kirameku-toolbox-docs li { font-size: 12.5px; color: var(--text-main); }
+.kirameku-toolbox-docs code {
+  background: var(--primary-soft);
+  color: var(--primary);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  word-break: break-all;
+}
+.kirameku-toolbox-docs table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6px 0;
+  font-size: 11.5px;
+}
+.kirameku-toolbox-docs th,
+.kirameku-toolbox-docs td {
+  border: 1px solid rgba(241, 107, 79, 0.22);
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+.kirameku-toolbox-docs th { background: var(--primary-soft); }
+.kirameku-toolbox-docs pre {
+  background: #2b2b3a;
+  color: #e6e6f0;
+  padding: 10px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 11.5px;
+  white-space: pre-wrap;
+}

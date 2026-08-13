@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="keywords" content="Like_Girl 克隆,情侣小站,React 情侣网站,情侣记录" />
+    <meta name="description" content="爱晨雾漫过青瓦，爱暮色染透篱笆，更爱与君并肩立，看遍这人间烟火里的朝暮与年华。" />
+    <title>Like_Girl v5.2.1 · Clone</title>
+    <!-- 字体：原站使用的 Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Pacifico&family=Concert+One&display=swap" rel="stylesheet" />
+    <!-- 尽早设置 data-theme，避免深色模式保存后首屏闪烁 -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('lovey-settings-v1')
+          var mode = raw ? (JSON.parse(raw).theme === 'dark' ? 'dark' : 'light') : 'light'
+          document.documentElement.setAttribute('data-theme', mode)
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light')
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
