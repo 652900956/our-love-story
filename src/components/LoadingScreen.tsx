@@ -12,7 +12,8 @@ export default function LoadingScreen() {
 
   useEffect(() => {
     if (!theme.flags.enableLoadingScreen) return
-    const t = window.setTimeout(() => setVisible(false), 1800)
+    // 缩短开屏遮罩时长（1.8s → 0.7s），减少「假慢」观感
+    const t = window.setTimeout(() => setVisible(false), 700)
     return () => window.clearTimeout(t)
   }, [])
 

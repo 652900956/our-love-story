@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import theme from './config/theme.config'
 import { SettingsProvider, useSettings } from './hooks/useSettings'
@@ -15,15 +15,17 @@ import Toolbox from './components/Toolbox'
 import ClickEffect from './components/ClickEffect'
 import MouseTrail from './components/MouseTrail'
 import PasscodeGate from './components/PasscodeGate'
-import Home from './pages/Home'
-import About from './pages/About'
-import Little from './pages/Little'
-import List from './pages/List'
-import LovePhoto from './pages/LovePhoto'
-import Message from './pages/Message'
-import CalendarTodo from './pages/CalendarTodo'
-import Ledger from './pages/Ledger'
-import Placeholder from './pages/Placeholder'
+// 页面按需分包：首屏只加载首页 + 公共依赖，其余页面访问到时才下载，
+// 显著缩小首屏 JS 体积、加快首屏渲染。
+const Home = lazy(() => import('./pages/Home'))
+const About = lazy(() => import('./pages/About'))
+const Little = lazy(() => import('./pages/Little'))
+const List = lazy(() => import('./pages/List'))
+const LovePhoto = lazy(() => import('./pages/LovePhoto'))
+const Message = lazy(() => import('./pages/Message'))
+const CalendarTodo = lazy(() => import('./pages/CalendarTodo'))
+const Ledger = lazy(() => import('./pages/Ledger'))
+const Placeholder = lazy(() => import('./pages/Placeholder'))
 
 function AnimatedRoutes() {
   const location = useLocation()
@@ -33,17 +35,19 @@ function AnimatedRoutes() {
   // 完成回调偶发未触发时会死锁，导致新页面一直等待挂载而整页空白，
   // 必须再次点击导航才会强制重挂（正是「屏保进入后空白、点别的才显示」的根因模式）。
   return (
-    <Routes location={location}>
-      <Route path="/" element={<Home />} />
-      <Route path="/little" element={<Little />} />
-      <Route path="/leaving" element={<Message />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/love-img" element={<LovePhoto />} />
-      <Route path="/list" element={<List />} />
-      <Route path="/calendar" element={<CalendarTodo />} />
-      <Route path="/ledger" element={<Ledger />} />
-      <Route path="*" element={<Placeholder title="页面走丢了" />} />
-    </Routes>
+    <Suspense fallback={<div style={{ minHeight: '60vh' }} aria-hidden />}>
+      <Routes location={location}>
+        <Route path="/" element={<Home />} />
+        <Route path="/little" element={<Little />} />
+        <Route path="/leaving" element={<Message />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/love-img" element={<LovePhoto />} />
+        <Route path="/list" element={<List />} />
+        <Route path="/calendar" element={<CalendarTodo />} />
+        <Route path="/ledger" element={<Ledger />} />
+        <Route path="*" element={<Placeholder title="页面走丢了" />} />
+      </Routes>
+    </Suspense>
   )
 }
 

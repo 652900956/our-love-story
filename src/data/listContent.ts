@@ -27,5 +27,6 @@ export const list = {
     { id: 't4', title: '合拍一组复古胶片照', desc: '找家老照相馆，穿得正式一点，裱起来挂墙上。', done: false, progress: 0 },
     { id: 't5', title: '学会做你最爱的那道菜', desc: '番茄牛腩，炖到软烂，火候要练。', done: false, progress: 0 },
     { id: 't6', title: '存一笔「说走就走」基金', desc: '每个月攒一点，专门用来临时起意的旅行。', done: false, progress: 0 },
+    { id: 't7', title: '一起跨年看烟花', desc: '在零点钟声敲响的那一刻，说一声新年快乐。', done: false, progress: 0 },
   ] as ListItem[],
 }

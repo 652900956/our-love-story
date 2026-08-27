@@ -9,7 +9,6 @@
  * 主题：珊瑚色 + 明暗主题由 index.css 的 CSS 变量驱动，本组件无需感知。
  * ========================================================================== */
 import { useEffect } from 'react'
-import { initToolbox } from './toolbox/initToolbox'
 import './toolbox/styles.css'
 
 export default function Toolbox() {
@@ -19,10 +18,20 @@ export default function Toolbox() {
     root.id = 'kirameku-toolbox-root'
     document.body.appendChild(root)
 
-    const destroy = initToolbox(root)
+    // 延迟加载 64KB 的工具箱逻辑，使其不进入首屏主包，加快首屏渲染
+    let destroyed = false
+    let destroy: (() => void) | undefined
+    import('./toolbox/initToolbox').then(({ initToolbox }) => {
+      if (destroyed) {
+        root.remove()
+        return
+      }
+      destroy = initToolbox(root)
+    })
 
     return () => {
-      destroy()
+      destroyed = true
+      destroy?.()
       root.remove()
     }
     // 工具箱结束
