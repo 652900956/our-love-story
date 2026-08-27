@@ -9,6 +9,7 @@
  */
 import { supabase } from '../config/supabase'
 import { subscribeTable } from './realtime'
+import { messages as staticMessages } from '../data/siteContent'
 
 export interface MessageItem {
   id: string
@@ -20,12 +21,28 @@ export interface MessageItem {
 
 const LS_KEY = 'lovey_messages'
 
+/** 把 siteContent.messages 的展示型结构映射成 API 用的 MessageItem（created_at 用于时间显示） */
+function toApiMessage(m: { id: string; name: string; content: string; date?: string }): MessageItem {
+  return { id: m.id, name: m.name, content: m.content, created_at: m.date ?? '' }
+}
+
+/**
+ * 读取本地留言：
+ *  - 未接 Supabase 时，站点默认留言（siteContent.messages）作为基底；
+ *  - 访客在自己浏览器里新增的留言追加其后并去重，
+ *    这样刷新不会把站点默认留言覆盖掉，也符合「访客只能看、不能改他人内容」。
+ */
 function readLocal(): MessageItem[] {
+  const base = staticMessages.map(toApiMessage)
   try {
     const raw = localStorage.getItem(LS_KEY)
-    return raw ? (JSON.parse(raw) as MessageItem[]) : []
+    if (!raw) return base
+    const local = JSON.parse(raw) as MessageItem[]
+    const seen = new Set(base.map((m) => m.id))
+    const extra = local.filter((m) => !seen.has(m.id))
+    return [...base, ...extra]
   } catch {
-    return []
+    return base
   }
 }
 

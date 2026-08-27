@@ -17,16 +17,17 @@ export interface HeroPerson {
 }
 
 export const hero = {
-  /** 背景封面图（占位，建议替换为你们的共同照片） */
-  background:
-    'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1600&q=80',
+  /** 背景封面图（本地静态资源，放到 public/images/cover/cover.jpg） */
+  background: '/images/cover/cover.jpg',
   male: {
     name: '磊磊',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=320&q=80',
+    /** 本地静态头像，放到 public/images/avatars/male.jpg */
+    avatar: '/images/avatars/male.jpg',
   } satisfies HeroPerson,
   female: {
     name: '聪聪',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=80',
+    /** 本地静态头像，放到 public/images/avatars/female.jpg */
+    avatar: '/images/avatars/female.jpg',
   } satisfies HeroPerson,
 }
 
@@ -40,7 +41,7 @@ export interface NavLink {
 
 /** 顶部导航文案 */
 export const header = {
-  logo: 'Like_Girl',
+  logo: 'LoveLover',
   version: 'v5.2.1',
   slogan: '爱晨雾漫过青瓦，爱暮色染透篱笆，更爱与君并肩立，看遍这人间烟火里的朝暮与年华。',
   /** 导航菜单（点击跳转对应路由，Navbar 渲染） */
@@ -84,7 +85,7 @@ export const cards: HomeCard[] = [
 export const footer = {
   icp: '',
   icpLink: '',
-  copyright: 'Copyright © 2022 - 2025 Like_Girl All Rights Reserved.',
+  copyright: 'Copyright © 2024 - 2026 LoveLover All Rights Reserved.',
 }
 
 /** 右下固定侧边栏 */
