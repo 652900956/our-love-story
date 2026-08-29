@@ -130,18 +130,20 @@ export const loveList: LoveListItem[] = [
 /* 照片墙：把图片放进 public/images/photos/，在下面按文件名添加/修改条目。
    标题、日期、备注可随时在下方替换，不需要改页面代码。 */
 export const photos: PhotoItem[] = [
-  { id: 'p1', src: '/images/photos/IMG_20260326_144404.jpg', caption: '一起看过的风景', date: '待填写', note: '' },
-  { id: 'p2', src: '/images/photos/IMG_20260326_213906.jpg', caption: '海边的约定', date: '待填写', note: '' },
-  { id: 'p3', src: '/images/photos/IMG_20260327_010315.jpg', caption: '旅途中的我们', date: '待填写', note: '' },
-  { id: 'p4', src: '/images/photos/IMG_20260327_010725.jpg', caption: '照片 04', date: '待填写', note: '' },
-  { id: 'p5', src: '/images/photos/IMG_20260327_011942.jpg', caption: '照片 05', date: '待填写', note: '' },
-  { id: 'p6', src: '/images/photos/IMG20260116175342.jpg', caption: '照片 06', date: '待填写', note: '' },
-  { id: 'p7', src: '/images/photos/IMG20260116180702.jpg', caption: '照片 07', date: '待填写', note: '' },
-  { id: 'p8', src: '/images/photos/IMG20260116184813.jpg', caption: '照片 08', date: '待填写', note: '' },
-  { id: 'p9', src: '/images/photos/IMG20260116232544.jpg', caption: '照片 09', date: '待填写', note: '' },
-  { id: 'p10', src: '/images/photos/MEITU_20241111_205845301.jpg', caption: '照片 10', date: '待填写', note: '' },
-  { id: 'p11', src: '/images/photos/mmexport1774507457799.jpg', caption: '照片 11', date: '待填写', note: '' },
-  { id: 'p12', src: '/images/photos/Screenshot_2026-01-04-23-05-53-11_e39d2c7de19156b0683cd93e8735f348.jpg', caption: '照片 12', date: '待填写', note: '' },
+  { id: 'p1', src: '/images/photos/IMG_20260326_213906.jpg', caption: '海边的约定', date: '待填写', note: '' },
+  { id: 'p2', src: '/images/photos/IMG_20260327_010315.jpg', caption: '旅途中的我们', date: '待填写', note: '' },
+  { id: 'p3', src: '/images/photos/IMG_20260327_010725.jpg', caption: '照片 03', date: '待填写', note: '' },
+  { id: 'p4', src: '/images/photos/IMG_20260327_011942.jpg', caption: '照片 04', date: '待填写', note: '' },
+  { id: 'p5', src: '/images/photos/IMG20260116180702.jpg', caption: '照片 05', date: '待填写', note: '' },
+  { id: 'p6', src: '/images/photos/mmexport1774507457799.jpg', caption: '照片 06', date: '待填写', note: '' },
+  { id: 'p7', src: '/images/photos/IMG_20260829_021456.png', caption: '照片 07', date: '待填写', note: '' },
+  { id: 'p8', src: '/images/photos/IMG_20260829_021616.png', caption: '照片 08', date: '待填写', note: '' },
+  { id: 'p9', src: '/images/photos/IMG_20260829_023556.png', caption: '照片 09', date: '待填写', note: '' },
+  { id: 'p10', src: '/images/photos/IMG_20260829_023652.png', caption: '照片 10', date: '待填写', note: '' },
+  { id: 'p11', src: '/images/photos/IMG_20260829_023743.png', caption: '照片 11', date: '待填写', note: '' },
+  { id: 'p12', src: '/images/photos/IMG_20260829_023844.png', caption: '照片 12', date: '待填写', note: '' },
+  { id: 'p13', src: '/images/photos/IMG_20260829_024228.png', caption: '照片 13', date: '待填写', note: '' },
+  { id: 'p14', src: '/images/photos/IMG_20260829_024317.png', caption: '照片 14', date: '待填写', note: '' },
 ]
 
 /* ============================== 留言板 Message ============================== */
